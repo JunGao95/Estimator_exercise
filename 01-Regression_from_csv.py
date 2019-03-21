@@ -1,64 +1,103 @@
 import tensorflow as tf
-import numpy as np
-import pandas as pd
 
+
+MODEL_NAME = '01_Regression_from_csv'
 HEADERS = ['key', 'x', 'y', 'alpha', 'beta', 'target']
 NUMERIC_FEATURE_NAMES = ['x', 'y']
+INDICATOR_FEATURE_NAMES = []
 CATEGORICAL_FEATURE_DICT = {'alpha':['ax01', 'ax02'],
                             'beta' :['bx01', 'bx02']}
 CATEGORICAL_FEATURE_NAME = list(CATEGORICAL_FEATURE_DICT.keys())
 FEATURE_NAME = NUMERIC_FEATURE_NAMES + CATEGORICAL_FEATURE_NAME
+TRAIN_PATH = 'data\\train-data.csv'
 
 
-# 1.定义导入函数，从csv文件中返回一个input_fn
+# 1.定义导入函数，从csv文件中返回
 def generate_pandas_input_fn(file_name,
                              mode=tf.estimator.ModeKeys.EVAL,
-                             num_epochs=1,
-                             batch_size=100):
-    train_df = pd.read_csv(file_name,
-                           names=HEADERS)
-    x = train_df[FEATURE_NAME].copy()
-    y = train_df['target']
+                             num_epochs=2,
+                             batch_size=500):
+    def input_fn(file_name=file_name,
+                 mode=mode,
+                 num_epochs=num_epochs,
+                 batch_size=batch_size):
+        ds = tf.data.TextLineDataset(file_name)
 
-    num_epochs = num_epochs if mode==tf.estimator.ModeKeys.TRAIN else 1
-    shuffle = True if mode==tf.estimator.ModeKeys.EVAL else False
+        def _parse_line(line):
+            fields = tf.decode_csv(line, [0, 0.0, 0.0, 'ax01', 'bx01', 0.0])
+            features = dict(zip(HEADERS, fields))
+            label = features.pop('target')
+            return features, label
+        ds = ds.map(_parse_line)
 
-    pandas_input_fn = tf.estimator.inputs.pandas_input_fn(x=x,
-                                                          y=y,
-                                                          batch_size=batch_size,
-                                                          num_epochs=num_epochs,
-                                                          shuffle=shuffle,
-                                                          target_column='target'
-                                                          )
-    print("data input fn:")
-    print("Input_file:{}".format(file_name))
-    print("Dataset_size:{}".format(len(train_df)))
-    print("Num_epochs:{}".format(num_epochs))
-    print("batch_size:{}".format(batch_size))
-
-    return pandas_input_fn
+        num_epochs = num_epochs if mode==tf.estimator.ModeKeys.TRAIN else 1
+        shuffle = True if mode==tf.estimator.ModeKeys.EVAL else False
+        ds = ds.repeat(num_epochs)
+        ds = ds.shuffle(10000)
+        ds = ds.batch(batch_size)
 
 
-features, target = generate_pandas_input_fn(file_name=r'data\train-data.csv')()
-print("Features read from csv:{}".format(list(features.keys())))
-print("Target read from csv:{}").format(target)
-print(target)
+        return ds
+
+    print("Input_fn building completed")
+
+    return input_fn
 
 
 # 2.定义特征列函数
 def get_feature_columns():
     feature_columns = {}
     for feature in NUMERIC_FEATURE_NAMES:
-        feature_columns[feature] = feature_columns.append(tf.feature_column.numeric_column(key=feature))
+        feature_columns[feature] = tf.feature_column.numeric_column(key=feature)
     for item in CATEGORICAL_FEATURE_DICT.items():
-        feature_columns[item[0]] = (tf.feature_column.categorical_column_with_vocabulary_list(key=item[0],
-                                                                                              vocabulary_list=item[1]))
+        feature_columns[item[0]] = tf.feature_column.categorical_column_with_vocabulary_list(key=item[0],
+                                                                                             vocabulary_list=item[1]
+                                                                                             )
     feature_columns['alphaXbeta'] = tf.feature_column.crossed_column([feature_columns['alpha'], feature_columns['beta']], 4)
+    CATEGORICAL_FEATURE_NAME.append('alphaXbeta')
+    for _ in CATEGORICAL_FEATURE_NAME:
+        feature_columns['indicator_{}'.format(_)] = tf.feature_column.indicator_column(feature_columns[_])
+        INDICATOR_FEATURE_NAMES.append('indicator_{}'.format(_))
+    feature_columns['indicator_alphaXbeta'] = tf.feature_column.indicator_column(feature_columns['alphaXbeta'])
+    estimator_feature_columns = list(feature_columns[_] for _ in INDICATOR_FEATURE_NAMES)
+    print("Estimator_feature_columns: {}".format(estimator_feature_columns))
     print("Feature_columns: {}".format(feature_columns.keys()))
-    return feature_columns
 
+    return estimator_feature_columns
 
 # 3.创建estimator
-def create_estimator(run_config, hparams):
+def create_estimator(hparams):
+
+    feature_columns = get_feature_columns()
+    estimator = tf.estimator.DNNRegressor(
+        feature_columns=feature_columns,
+        hidden_units=hparams.hidden_units,
+        optimizer=tf.train.AdamOptimizer(),
+        activation_fn=tf.nn.elu,
+        dropout=hparams.dropout_prob,
+        model_dir='trained_model\\{}'.format(MODEL_NAME)
+    )
+
+    print('Estimator built completed.')
+    return estimator
 
 
+hparams = tf.contrib.training.HParams(
+    num_epochs = 100,
+    batch_size = 500,
+    hidden_units = [8,4],
+    dropout_prob = 0.0
+)
+
+
+# 4.实例化Estimator并训练
+estimator = create_estimator(hparams)
+
+train_input_fn = generate_pandas_input_fn(file_name='data\\train-data.csv',
+                                          mode=tf.estimator.ModeKeys.TRAIN,
+                                          num_epochs=hparams.num_epochs,
+                                          batch_size=hparams.batch_size)
+tf.logging.set_verbosity(tf.logging.INFO)
+print("Estimator training started.")
+estimator.train(input_fn = train_input_fn)
+print("Estimator training finished")

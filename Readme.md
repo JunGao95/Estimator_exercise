@@ -1,6 +1,7 @@
 ##20190321
 1. 在Github远程仓库创建Repo；
-2. 导入数据集，开始编写01-Regression_from_csv.py
+2. 导入数据集，完成01-Regression_from_csv.py
+
 
 
 
