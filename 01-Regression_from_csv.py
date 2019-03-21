@@ -47,13 +47,18 @@ print(target)
 
 # 2.定义特征列函数
 def get_feature_columns():
-    feature_columns = []
+    feature_columns = {}
     for feature in NUMERIC_FEATURE_NAMES:
-        feature_columns.append(tf.feature_column.numeric_column(key=feature))
+        feature_columns[feature] = feature_columns.append(tf.feature_column.numeric_column(key=feature))
     for item in CATEGORICAL_FEATURE_DICT.items():
-        feature_columns.append(tf.feature_column.categorical_column_with_vocabulary_list(key=item[0],
-                                                                                         vocabulary_list=item[1]))
+        feature_columns[item[0]] = (tf.feature_column.categorical_column_with_vocabulary_list(key=item[0],
+                                                                                              vocabulary_list=item[1]))
+    feature_columns['alphaXbeta'] = tf.feature_column.crossed_column([feature_columns['alpha'], feature_columns['beta']], 4)
+    print("Feature_columns: {}".format(feature_columns.keys()))
     return feature_columns
 
+
+# 3.创建estimator
+def create_estimator(run_config, hparams):
 
 
