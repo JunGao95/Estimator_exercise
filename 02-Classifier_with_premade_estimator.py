@@ -11,9 +11,9 @@ BATCH_SIZE = 100
 TRAIN_STEPS = 1000
 
 # 0.下载数据，定义数据输出函数
-train_csv_path = tf.keras.utils.get_file(fname='F:\\Github\\Estimator_exercise\\data\\'+TRAIN_URL.split('/')[-1],
+train_csv_path = tf.keras.utils.get_file(fname='data\\'+TRAIN_URL.split('/')[-1],
                                          origin=TRAIN_URL)
-test_csv_path = tf.keras.utils.get_file(fname='F:\\Github\\Estimator_exercise\\data\\'+TEST_URL.split('/')[-1],
+test_csv_path = tf.keras.utils.get_file(fname='data\\'+TEST_URL.split('/')[-1],
                                         origin=TEST_URL)
 train_df = pd.read_csv(train_csv_path, names=CSV_COLUMN_NAMES, header=0)
 test_df = pd.read_csv(test_csv_path, names=CSV_COLUMN_NAMES, header=0)
@@ -67,3 +67,15 @@ eval_result = estimator.evaluate(
 print(eval_result)
 
 # 6. 模型训练
+expected = ['Setora', 'Versicolor', 'Virginica']
+predict_x = {
+        'SepalLength': [5.1, 5.9, 6.9],
+        'SepalWidth': [3.3, 3.0, 3.1],
+        'PetalLength': [1.7, 4.2, 5.4],
+        'PetalWidth': [0.5, 1.5, 2.1],
+    }
+predictions = estimator.predict(
+    input_fn = lambda:eval_input_fn(predict_x, None, BATCH_SIZE)
+)
+for p in predictions:
+    print('{}\n'.format(p))

@@ -20,18 +20,15 @@ def generate_csv_input_fn(file_name,
                              mode=tf.estimator.ModeKeys.EVAL,
                              num_epochs=2,
                              batch_size=500):
-    def input_fn(file_name=file_name,
-                 mode=mode,
-                 num_epochs=num_epochs,
-                 batch_size=batch_size):
+    def input_fn(file_name=file_name, mode=mode, num_epochs=num_epochs, batch_size=batch_size):
         ds = tf.data.TextLineDataset(file_name)
         def _parse_line(line):
             if mode == tf.estimator.ModeKeys.PREDICT:
-                fields = tf.decode_csv(line, [0, 0.0, 0.0, 'ax01', 'bx01'])
+                fields = tf.decode_csv(line, [[0], [0.0], [0.0], ['ax01'], ['bx01']])
                 features = dict(zip(EVAL_HEADERS, fields))
                 return features
             else:
-                fields = tf.decode_csv(line, [0, 0.0, 0.0, 'ax01', 'bx01', 0.0])
+                fields = tf.decode_csv(line, [[0], [0.0], [0.0], ['ax01'], ['bx01'], [0.0]])
                 features = dict(zip(HEADERS, fields))
                 label = features.pop('target')
                 return features, label
