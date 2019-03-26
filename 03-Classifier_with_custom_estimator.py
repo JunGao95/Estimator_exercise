@@ -13,11 +13,13 @@ BATCH_SIZE = 500
 NUM_EPOCHS = 1000
 tf.logging.set_verbosity(tf.logging.INFO)
 
+
 # 1.input_fn生成函数
 def generate_input_fn(file_name, mode=tf.estimator.ModeKeys.EVAL,
                       batch_size=BATCH_SIZE, num_epochs=NUM_EPOCHS):
     def input_fn():
         dataset = tf.data.TextLineDataset(file_name).skip(1)
+
         def _parse_line(line):
             if mode == tf.estimator.ModeKeys.PREDICT:
                 line = tf.decode_csv(line, [[0.0]]*4)
@@ -32,6 +34,8 @@ def generate_input_fn(file_name, mode=tf.estimator.ModeKeys.EVAL,
         if mode != tf.estimator.ModeKeys.PREDICT:
             dataset = dataset.shuffle(batch_size)
             dataset = dataset.repeat(num_epochs).batch(batch_size)
+        else:
+            dataset = dataset.batch(batch_size)
         return dataset
     print('Input_fn built completed!')
     return input_fn
@@ -51,9 +55,9 @@ def custom_model(features, labels, mode, params):
     predicted_classes = tf.argmax(logits, 1)
     if mode == tf.estimator.ModeKeys.PREDICT:
         predictions = {
-            'class_ids':predicted_classes,
-            'probabilities':tf.nn.softmax(logits),
-            'logits':logits
+            'class_ids': predicted_classes,
+            'probabilities': tf.nn.softmax(logits),
+            'logits': logits
         }
         return tf.estimator.EstimatorSpec(mode, predictions=predictions)
 
@@ -77,7 +81,7 @@ classifier = tf.estimator.Estimator(model_fn=custom_model,
 
 # 4. estimator训练
 classifier.train(input_fn=generate_input_fn(TRAIN_FILE_PATH,
-                                           mode=tf.estimator.ModeKeys.TRAIN))
+                                            mode=tf.estimator.ModeKeys.TRAIN))
 
 # 5. estimator验证
 eval_result = classifier.evaluate(input_fn=generate_input_fn(EVAL_FILE_PATH,
@@ -87,5 +91,7 @@ print(eval_result)
 # 6. estimator预测
 predict_result = classifier.predict(input_fn=generate_input_fn(PREDICT_FILE_PATH,
                                               mode=tf.estimator.ModeKeys.PREDICT))
+
 for p in predict_result:
     print('{}\n'.format(p))
+
