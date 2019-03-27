@@ -87,12 +87,18 @@ def cnn_model_fn(features, labels, mode):
     }
     return tf.estimator.EstimatorSpec(mode=mode, loss=loss, eval_metric_ops=eval_metric_op)
 
-estimator = tf.estimator.Estimator(model_fn=cnn_model_fn, model_dir='trained_model\\05-MNIST_classifier_with_custom_estimator')
+estimator = tf.estimator.Estimator(model_fn=cnn_model_fn,
+                                   model_dir='trained_model\\05-MNIST_classifier_with_custom_estimator')
 
-# 创建记录钩子
-#tensors_to_log = {'probabilities':'softmax_tensor'}
-#logging_hook = tf.train.LoggingTensorHook(tensors=tensors_to_log, every_n_iter=50)
-
+# 4. 模型训练
 estimator.train(input_fn=generate_input_fn(mode=tf.estimator.ModeKeys.TRAIN),
                 steps=200)
-                # hooks=[logging_hook])
+
+# 5. 模型验证
+eval_result = estimator.evaluate(input_fn=generate_input_fn(mode=tf.estimator.ModeKeys.EVAL))
+print(eval_result)
+
+# 6. 预测
+predict_result = estimator.predict(input_fn=generate_input_fn(mode=tf.estimator.ModeKeys.PREDICT))
+for p in predict_result:
+    print(p)

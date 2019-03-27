@@ -37,7 +37,7 @@
 1. 补全02-Classifier_with_premade_estimator.py中预测部分代码；
 2. 完成03-Classifier_with_custom_estimator.py模型构建和训练部分代码；
 
-#### 20190326
+#### 20190327
 1. 完成03-Classifier_with_custom_estimator.py的预测部分代码；
 2. 完成04-MNIST_classifier_with_premade_estimator.py
 3. 完成05-MNIST_classifier_with_custom_estimator.py
