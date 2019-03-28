@@ -1,30 +1,46 @@
-## 代码说明
+## Introduction 代码说明
+This repo is a set of codes about tensorflow estimator api tutorial.
+
+Tensorflow version 1.12 needed.
+
 本Repo是个人学习tf.Estimator组件及其相关API时创建的包含数据的代码集；
 
 使用的tensorflow版本是1.12.
 
+
+
 - 01-Regression_from_csv.py 
+
+Read data from .csv file and use premade estimator for regression.
 
 从csv文件中读取数据，使用预置的Estimator做回归训练
 
 - 02-Classifier_with_premade_estimator.py
 
+Download IRIS dataset, use DNNClassifier for classifying.
+
 下载IRIS数据集，然后使用预置Estimator做分类训练
 
 - 03-Classifier_with_custom_estimator.py
+
+Made custom estimator for IRIS classifying.
 
 使用IRIS数据集和Custom Estimator做分类训练
 
 - 04-MNIST_classifier_with_premade_estimator.py
 
+MNIST classifying with DNNClassifier.
+
 使用DNNClassifier完成MNIST分类
 
 - 05-MNIST_classifier_with_custom_estimator.py
 
+MNIST classifying with CNN custom estimator.
+
 使用自制卷积神经网络完成MNIST分类
 
 
-## 更新日志
+## Update log 更新日志
 #### 20190321
 1. 在Github远程仓库创建Repo；
 2. 导入数据集，完成01-Regression_from_csv.py
@@ -43,7 +59,7 @@
 3. 完成05-MNIST_classifier_with_custom_estimator.py
 
 
-## 参考资料
+## Reference 参考资料
 - https://github.com/GoogleCloudPlatform/tf-estimator-tutorials
 - https://github.com/tensorflow/models/blob/master/samples/core/get_started/iris_data.py
 - https://www.tensorflow.org/guide/custom_estimators
